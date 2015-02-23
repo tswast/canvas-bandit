@@ -19,21 +19,54 @@ app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
 thread = None
 
+
+class Bandit(object):
+    def __init__(self, data, index):
+        self.data = data
+        self.index = index
+        self.count = 1
+
+
+random_colors = [
+    Bandit(random.randrange(2 ** 24), i) for i in range(8)
+]
+
+
+def randcolor():
+    """Returns random color according to probability of success."""
+    total_colors = sum((c.count for c in random_colors))
+    random_count = random.randrange(total_colors)
+    running_total = 0
+    for c in random_colors:
+        running_total += c.count
+        if random_count < running_total:
+            return c
+    print "Warning, got unexpected random_count"
+    return random_colors[-1]
+
+
+def rgbcolor(value):
+    """Returns RGB color value from 24-bit integer."""
+    r = (value & 0xFF0000) >> 16
+    g = (value & 0xFF00) >> 8
+    b = value & 0xFF
+    return (r, g, b)
+
+
 def background_thread():
     """Example of how to send server generated events to clients."""
     count = 0
     while True:
         time.sleep(1)
         count += 1
+        color = randcolor()
         socketio.emit(
             'my response',
             {
-                'data': 'Server generated event',
-                'color': 'rgb({r}, {g}, {b})'.format(
-                    r=random.randrange(256),
-                    g=random.randrange(256),
-                    b=random.randrange(256)),
-                'count': count
+                'data': 'Server generated event : color {0} count {1}'.format(color.index, color.count),
+                'color': 'rgb({0}, {1}, {2})'.format(*rgbcolor(color.data)),
+                'count': count,
+                'index': color.index,
             },
             namespace='/test')
 
@@ -50,6 +83,15 @@ def index():
 @socketio.on('connect', namespace='/test')
 def test_connect():
     emit('my response', {'data': 'Connected', 'count': 0})
+
+
+@socketio.on('my event', namespace='/test')
+def test_message(message):
+    print 'got: ', message
+    try:
+        random_colors[int(message['index'])].count += 1
+    except KeyError:
+        pass
 
 
 if __name__ == '__main__':
