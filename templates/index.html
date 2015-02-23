@@ -1,7 +1,10 @@
 <!DOCTYPE HTML>
 <html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <head>
-    <title>Flask-SocketIO Test</title>
+    <title>Canvas Bandit</title>
     <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
     <script type="text/javascript" charset="utf-8">
@@ -16,14 +19,14 @@
             // event handler for server sent data
             // the data is displayed in the "Received" section of the page
             socket.on('my response', function(msg) {
-				$('#log').append('<br>Received #' + msg.count + ': ' + msg.data + ': ' + msg.color);
-				$('#log').css('background-color', msg.color);
+				$('#log').text('Received #' + msg.count + ': ' + msg.data + ': ' + msg.color);
+				$('body').css('background-color', msg.color);
             });
         });
     </script>
 </head>
 <body>
-    <h1>Flask-SocketIO Test</h1>
+    <h1>Canvas Bandit</h1>
     <h2>Send:</h2>
     <h2>Receive:</h2>
     <div id="log"></div>
