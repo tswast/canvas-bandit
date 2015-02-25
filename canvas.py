@@ -2,22 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
-from gevent import monkey
-monkey.patch_all()
-
 import random
 import time
-from threading import Thread
-from flask import Flask, render_template, session, request
-from flask.ext.socketio import SocketIO, emit, join_room, leave_room, \
-        close_room, disconnect
 
-app = Flask(__name__)
-app.debug = True
-app.config['SECRET_KEY'] = 'secret!'
-socketio = SocketIO(app)
-thread = None
+import zmq
 
 
 class Bandit(object):
@@ -53,46 +41,17 @@ def rgbcolor(value):
     return (r, g, b)
 
 
-def background_thread():
+def main():
     """Example of how to send server generated events to clients."""
-    count = 0
+    context = zmq.Context()
+    socket = context.socket(zmq.PAIR)
+    socket.bind('tcp://127.0.0.1:5001')
     while True:
-        time.sleep(1)
-        count += 1
         color = randcolor()
-        socketio.emit(
-            'my response',
-            {
-                'data': 'Server generated event : color {0} count {1}'.format(color.index, color.count),
-                'color': 'rgb({0}, {1}, {2})'.format(*rgbcolor(color.data)),
-                'count': count,
-                'index': color.index,
-            },
-            namespace='/test')
-
-
-@app.route('/')
-def index():
-    global thread
-    if thread is None:
-        thread = Thread(target=background_thread)
-        thread.start()
-    return render_template('index.html')
-
-
-@socketio.on('connect', namespace='/test')
-def test_connect():
-    emit('my response', {'data': 'Connected', 'count': 0})
-
-
-@socketio.on('my event', namespace='/test')
-def test_message(message):
-    print 'got: ', message
-    try:
-        random_colors[int(message['index'])].count += 1
-    except KeyError:
-        pass
+        print "sending color ", color.data
+        socket.send(repr(color.data))
+        time.sleep(1)
 
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0')
+    main()
