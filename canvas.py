@@ -50,7 +50,7 @@ def main():
         color = randcolor()
         print "sending color ", color.data
         socket.send(repr(color.data))
-        time.sleep(1)
+        time.sleep(10)
 
 
 if __name__ == '__main__':

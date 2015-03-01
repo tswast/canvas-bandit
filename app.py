@@ -47,6 +47,7 @@ def background_thread():
                 'count': count
             },
             namespace='/test')
+        print 'done sending color: ', color
 
 
 @app.route('/')
