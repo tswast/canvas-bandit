@@ -12,23 +12,25 @@
         $(document).ready(function(){
             namespace = '/test'; // change to an empty string to use the global namespace
             // the socket.io documentation recommends sending an explicit package upon connection
-            // this is specially important when using the global namespace
-			var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
-            socket.on('connect', function() {
-                socket.emit('my event', {data: 'I\'m connected!'});
-            });
+			// this is specially important when using the global namespace
+			var socket = new WebSocket('ws://' + document.domain + ':10000/');
+			//var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
+            socket.onopen = function() {
+                socket.send(JSON.stringify({data: 'I\'m connected!'}));
+            };
 
             // event handler for server sent data
             // the data is displayed in the "Received" section of the page
-            socket.on('my response', function(msg) {
+			socket.onmessage = function(evt) {
+			    var msg = JSON.parse(evt.data);
 				$('#log').text('Received #' + msg.count + ': ' + msg.data + ' : ' + msg.color);
 				$('body').css('background-color', msg.color);
-            });
+            };
 
 			// handlers for the different forms in the page
             // these send data to the server in a variety of ways
 			$('form#emit').submit(function(event) {
-                socket.emit('my event', {data: 'good job'});
+                socket.send(JSON.stringify({data: 'good job!'}));
 				$('#log').text('Sent +reinforce');
                 return false;
             });
